@@ -1,0 +1,65 @@
+services:
+  mongo:
+    image: mongo:7
+    container_name: neuroscan-mongo
+    restart: unless-stopped
+    volumes:
+      - mongo-data:/data/db
+    ports:
+      - "27017:27017"
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  ml-service:
+    build: ./ml-service
+    container_name: neuroscan-ml-service
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 45s
+
+  server:
+    build: ./server
+    container_name: neuroscan-server
+    restart: unless-stopped
+    depends_on:
+      mongo:
+        condition: service_healthy
+      ml-service:
+        condition: service_healthy
+    environment:
+      PORT: 5000
+      ML_SERVICE_URL: http://ml-service:8000
+      MONGO_URI: mongodb://mongo:27017/neuroscan
+      CORS_ORIGIN: http://localhost
+    ports:
+      - "5000:5000"
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://localhost:5000/api/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))\""]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  client:
+    build:
+      context: ./client
+    container_name: neuroscan-client
+    restart: unless-stopped
+    depends_on:
+      server:
+        condition: service_healthy
+    ports:
+      - "80:80"
+
+volumes:
+  mongo-data:

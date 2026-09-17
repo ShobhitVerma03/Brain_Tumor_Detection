@@ -1,0 +1,7 @@
+Training/
+Testing/
+legacy-model/
+trained_model_mobilenetv2.keras
+__pycache__/
+output/
+notebooks/

@@ -1,0 +1,22 @@
+# Node
+node_modules/
+dist/
+.env
+
+# Python
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.venv/
+venv/
+
+# Training data / outputs (too large for git — document how to get it instead)
+ml-service/Training/
+ml-service/Testing/
+ml-service/output/
+ml-service/legacy-model/
+ml-service/trained_model_mobilenetv2.keras
+ml-service/notebooks/mobilenetv2_fine_tuning.ipynb
+
+# OS
+.DS_Store
